@@ -39,7 +39,7 @@ public class Renderer implements GLEventListener {
     gl.glLoadIdentity();
 
     gl.glColor3f(0.5f, 0.8f, 0.3f);
-    surface.Draw(gl);
+    surface.Draw(gl, new float[]{-1.0f, -1.0f, -1.0f});
   }
 
   @Override
