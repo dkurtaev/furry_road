@@ -8,10 +8,21 @@ public class Renderer implements GLEventListener {
 
   public Renderer() {
     camera = new Camera();
+    surface = new Surface(-10, 10, -1, 1, -10, 10, 16, 16);
   }
 
   @Override
-  public void init(GLAutoDrawable drawable) {}
+  public void init(GLAutoDrawable drawable) {
+    GL2 gl = drawable.getGL().getGL2();
+
+    gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+
+    try {
+      surface.InitShaderProgram(gl);
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
 
   @Override
   public void dispose(GLAutoDrawable drawable) {}
@@ -20,7 +31,6 @@ public class Renderer implements GLEventListener {
   public void display(GLAutoDrawable drawable) {
     GL2 gl = drawable.getGL().getGL2();
 
-    gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
 
     camera.Setup(gl, view_width, view_height, 30, 25, 30);
@@ -28,13 +38,8 @@ public class Renderer implements GLEventListener {
     gl.glMatrixMode(GL2.GL_MODELVIEW);
     gl.glLoadIdentity();
 
-    gl.glColor3f(0.1f, 0.4f, 0.3f);
-    gl.glBegin(GL2.GL_QUADS);
-      gl.glVertex3f(10, 0, 10);
-      gl.glVertex3f(10, 0, -10);
-      gl.glVertex3f(-10, 0, -10);
-      gl.glVertex3f(-10, 0, 10);
-    gl.glEnd();
+    gl.glColor3f(0.5f, 0.8f, 0.3f);
+    surface.Draw(gl);
   }
 
   @Override
@@ -48,5 +53,6 @@ public class Renderer implements GLEventListener {
   private Camera camera;
   private int view_width;
   private int view_height;
+  private Surface surface;
 
 }
