@@ -35,6 +35,7 @@ public class Surface {
                                                    "u_num_layers_above");
     loc_opacity_threshold_step =
         gl.glGetUniformLocation(shader_program, "u_opacity_threshold_step");
+    loc_n_layers = gl.glGetUniformLocation(shader_program, "u_n_layers");
   }
 
   public void Draw(GL2 gl, float light_vector[], int layer_idx) {
@@ -54,6 +55,7 @@ public class Surface {
     gl.glUniform1i(loc_num_layers_above, 49 - layer_idx);
     gl.glUniform1f(loc_opacity_threshold_step, opacity_thresholds[1] -
                                                opacity_thresholds[0]);
+    gl.glUniform1i(loc_n_layers, 50);
 
     gl.glBindTexture(GL.GL_TEXTURE_2D, opacity_map_id);
     gl.glBegin(GL2.GL_QUADS);
@@ -88,8 +90,12 @@ public class Surface {
     // Convolutional averaging.
     BufferedImage texture = new BufferedImage(width, height,
                                               BufferedImage.TYPE_BYTE_GRAY);
-    float conv_kernel_data[] = {0.11f, 0.11f, 0.11f, 0.11f, 0.11f, 0.11f, 0.11f,
-                                0.11f, 0.11f};
+    final int conv_kernel_size = 5;
+    float conv_kernel_data[] = new float[conv_kernel_size * conv_kernel_size];
+    float value = 1.0f / conv_kernel_data.length;
+    for (int i = 0; i < conv_kernel_data.length; ++i) {
+      conv_kernel_data[i] = value;
+    }
     Kernel conv_kernel = new Kernel(3, 3, conv_kernel_data);
     ConvolveOp conv_op = new ConvolveOp(conv_kernel);
     conv_op.filter(noise, texture);
@@ -146,6 +152,7 @@ public class Surface {
   private int loc_surfaces_step;
   private int loc_num_layers_above;
   private int loc_opacity_threshold_step;
+  private int loc_n_layers;
   private int opacity_map_id;
   private float opacity_thresholds[];
   private float x_limits[];

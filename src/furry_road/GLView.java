@@ -38,8 +38,6 @@ public class GLView extends JFrame {
 
     };
 
-
-
     addKeyListener(listener);
   }
 

@@ -5,6 +5,7 @@ uniform vec2 u_x_limits;
 uniform vec2 u_z_limits;
 uniform float u_surfaces_step;
 uniform int u_num_layers_above;
+uniform int u_n_layers;
 uniform float u_opacity_threshold_step;
 
 varying vec2 v_position;
@@ -42,8 +43,8 @@ void main() {
   
   float cos_angle = -normalize(u_light_vector).y;
   float step_by_light = u_surfaces_step / cos_angle;
-  vec2 shifted_position = v_position - step_by_light * vec2(u_light_vector[0],
-                                                            u_light_vector[2]);
+  vec2 shifted_position = v_position -step_by_light * vec2(u_light_vector[0],
+                                                           u_light_vector[2]);
   vec2 shifted_tex_coords = GetTexCoords(shifted_position);
   vec2 tex_coords_delta = shifted_tex_coords - tex_coords;
   
@@ -54,7 +55,12 @@ void main() {
   	  float threshold = u_opacity_threshold +
   	  					(float(i) + 1.0) * u_opacity_threshold_step;
       if (alpha >= threshold) {
-        gl_FragColor = vec4(0.0, 0.0, 0.0, gl_FragColor[3]);
+      	alpha = gl_FragColor[3];
+      	float ratio = (float(u_n_layers) - 1.0 - float(u_num_layers_above)) /
+      				  (float(u_n_layers) - 1.0);
+      	ratio = sqrt(ratio);
+      	gl_FragColor *= ratio;
+        gl_FragColor[3] = alpha;
 	    break;
 	  }
   	  shifted_tex_coords += tex_coords_delta;
