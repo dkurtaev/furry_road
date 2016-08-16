@@ -22,6 +22,8 @@ public class Renderer implements GLEventListener {
     } catch (Exception e) {
       e.printStackTrace();
     }
+
+    surface.GenerateOpacityMap(gl, n_surfaces);
   }
 
   @Override
@@ -39,7 +41,10 @@ public class Renderer implements GLEventListener {
     gl.glLoadIdentity();
 
     gl.glColor3f(0.5f, 0.8f, 0.3f);
-    surface.Draw(gl, new float[]{-1.0f, -1.0f, -1.0f});
+    for (int i = 0; i < n_surfaces; ++i) {
+      surface.Draw(gl, new float[]{-1.0f, -1.0f, -1.0f}, i);
+      gl.glTranslatef(0.0f, surfaces_shift, 0.0f);
+    }
   }
 
   @Override
@@ -54,5 +59,7 @@ public class Renderer implements GLEventListener {
   private int view_width;
   private int view_height;
   private Surface surface;
+  private static final float surfaces_shift = 0.05f;
+  private static final int n_surfaces = 50;
 
 }

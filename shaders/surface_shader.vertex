@@ -1,11 +1,14 @@
 attribute vec3 a_position;
 attribute vec3 a_normal;
+attribute vec2 a_tex_coords;
 
 varying vec4 v_color;
 varying vec3 v_normal;
+varying vec2 v_tex_coords;
 
 void main() {
   v_color = gl_Color;
   v_normal = a_normal;
+  v_tex_coords = a_tex_coords;
   gl_Position = gl_ModelViewProjectionMatrix * vec4(a_position, 1.0);
 }
