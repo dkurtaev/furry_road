@@ -11,7 +11,7 @@ public class Renderer implements GLEventListener {
 
   public Renderer() {
     camera = new Camera();
-    surface = new Surface(-10, 10, -10, 10, 16, 16);
+    surface = new Surface(-10, 10, -10, 10);
     text_renderer = new TextRenderer(new Font("Courier", Font.PLAIN, 14));
   }
 
@@ -57,8 +57,6 @@ public class Renderer implements GLEventListener {
     int fps = (int)drawable.getAnimator().getLastFPS();
     text_renderer.draw("fps: " + fps, 0, 8);
     text_renderer.endRendering();
-
-    System.out.println();
   }
 
   @Override
