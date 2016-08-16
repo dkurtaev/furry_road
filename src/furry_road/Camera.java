@@ -49,8 +49,14 @@ public class Camera {
     zenith = Math.max(-89f, Math.min(zenith, 89f));
   }
 
+  public void ChangeRadius(boolean increment) {
+    radius += radius_inc * (increment ? 1f : -1f);
+    radius = Math.max(0f, radius);
+  }
+
   private static final float azimuth_inc = 1.5f;
   private static final float zenith_inc = 1.0f;
+  private static final float radius_inc = 1.0f;
   private float radius;
   private float azimuth;
   private float zenith;
