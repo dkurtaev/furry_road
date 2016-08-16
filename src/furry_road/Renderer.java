@@ -77,6 +77,10 @@ public class Renderer implements GLEventListener {
     }
   }
 
+  public void WheelRotation(int rotation) {
+    camera.ChangeRadius(rotation > 0);
+  }
+
   private Camera camera;
   private int view_width;
   private int view_height;

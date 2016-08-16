@@ -2,6 +2,8 @@ package furry_road;
 
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 
 import javax.swing.JFrame;
 
@@ -38,7 +40,17 @@ public class GLView extends JFrame {
 
     };
 
+    MouseWheelListener wheel_listener = new MouseWheelListener(){
+
+      @Override
+      public void mouseWheelMoved(MouseWheelEvent e) {
+        renderer.WheelRotation(e.getWheelRotation());
+      }
+
+    };
+
     addKeyListener(listener);
+    addMouseWheelListener(wheel_listener);
   }
 
 }
