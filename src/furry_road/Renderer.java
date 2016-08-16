@@ -10,7 +10,7 @@ import com.jogamp.opengl.util.awt.TextRenderer;
 public class Renderer implements GLEventListener {
 
   public Renderer() {
-    camera = new Camera();
+    camera = new Camera(40, 45, 30);
     surface = new Surface(-10, 10, -10, 10, 16, 16);
     text_renderer = new TextRenderer(new Font("Courier", Font.PLAIN, 14));
   }
@@ -41,7 +41,7 @@ public class Renderer implements GLEventListener {
 
     gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
 
-    camera.Setup(gl, view_width, view_height, 30, 25, 30);
+    camera.Setup(gl, view_width, view_height);
 
     gl.glMatrixMode(GL2.GL_MODELVIEW);
     gl.glLoadIdentity();
@@ -57,8 +57,6 @@ public class Renderer implements GLEventListener {
     int fps = (int)drawable.getAnimator().getLastFPS();
     text_renderer.draw("fps: " + fps, 0, 8);
     text_renderer.endRendering();
-
-    System.out.println();
   }
 
   @Override
@@ -67,6 +65,16 @@ public class Renderer implements GLEventListener {
     gl.glViewport(0, 0, w, h);
     view_width = w;
     view_height = h;
+  }
+
+  public void KeyPressed(int key_code) {
+    switch (key_code) {
+      case 37: camera.ChangeAzimuth(false); break;  // Left arrow.
+      case 38: camera.ChangeZenith(true); break;  // Up arrow.
+      case 39: camera.ChangeAzimuth(true); break;  // Right arrow.
+      case 40: camera.ChangeZenith(false); break;  // Down arrow.
+      default: break;
+    }
   }
 
   private Camera camera;
