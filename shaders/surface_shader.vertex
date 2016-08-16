@@ -1,11 +1,8 @@
-attribute vec2 a_position;
-
 varying vec2 v_position;
 varying vec4 v_color;
 
 void main() {
-  v_position = a_position;
+  v_position = vec2(gl_Vertex[0], gl_Vertex[2]);
   v_color = gl_Color;
-  gl_Position = gl_ModelViewProjectionMatrix * vec4(a_position[0], 0.0,
-                                                    a_position[1], 1.0);
+  gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }
