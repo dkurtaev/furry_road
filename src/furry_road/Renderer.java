@@ -1,14 +1,18 @@
 package furry_road;
 
+import java.awt.Font;
+
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
+import com.jogamp.opengl.util.awt.TextRenderer;
 
 public class Renderer implements GLEventListener {
 
   public Renderer() {
     camera = new Camera();
-    surface = new Surface(-10, 10, -1, 1, -10, 10, 16, 16);
+    surface = new Surface(-10, 10, 0, 0, -10, 10, 16, 16);
+    text_renderer = new TextRenderer(new Font("Courier", Font.PLAIN, 14));
   }
 
   @Override
@@ -22,6 +26,10 @@ public class Renderer implements GLEventListener {
     } catch (Exception e) {
       e.printStackTrace();
     }
+
+    surface.GenerateOpacityMap(gl, n_surfaces);
+
+    drawable.getAnimator().setUpdateFPSFrames(n_frames_for_fps, null);
   }
 
   @Override
@@ -39,7 +47,18 @@ public class Renderer implements GLEventListener {
     gl.glLoadIdentity();
 
     gl.glColor3f(0.5f, 0.8f, 0.3f);
-    surface.Draw(gl, new float[]{-1.0f, -1.0f, -1.0f});
+    for (int i = 0; i < n_surfaces; ++i) {
+      surface.Draw(gl, new float[]{-1.0f, -1.0f, -1.0f}, i);
+      gl.glTranslatef(0.0f, surfaces_shift, 0.0f);
+    }
+
+    text_renderer.beginRendering(view_width, view_height);
+    text_renderer.setColor(0, 1, 0, 1);
+    int fps = (int)drawable.getAnimator().getLastFPS();
+    text_renderer.draw("fps: " + fps, 0, 8);
+    text_renderer.endRendering();
+
+    System.out.println();
   }
 
   @Override
@@ -54,5 +73,10 @@ public class Renderer implements GLEventListener {
   private int view_width;
   private int view_height;
   private Surface surface;
+  private static final float surfaces_shift = 0.05f;
+  private static final int n_surfaces = 50;
+  // Number of frames after which updates FPS counter.
+  private static final int n_frames_for_fps = 30;
+  private TextRenderer text_renderer;
 
 }

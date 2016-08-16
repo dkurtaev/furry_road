@@ -1,7 +1,10 @@
+uniform sampler2D u_opacity_map;
+uniform float u_opacity_threshold;
 uniform vec3 u_light_vector;
 
 varying vec4 v_color;
 varying vec3 v_normal;
+varying vec2 v_tex_coords;
 
 void main() {
   //         ^ normal    dot(light, normal) < 0 for visible reflection.
@@ -12,5 +15,10 @@ void main() {
   //
   float lum = -dot(normalize(u_light_vector), normalize(v_normal));
   gl_FragColor = v_color * max(0.0, lum);
-  gl_FragColor[3] = 1.0;
+
+  float alpha = texture2D(u_opacity_map, v_tex_coords)[0];
+  if (alpha < u_opacity_threshold) {
+    alpha = 0.0;
+  }
+  gl_FragColor[3] = alpha;
 }
