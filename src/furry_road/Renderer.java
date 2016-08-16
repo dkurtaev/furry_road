@@ -11,7 +11,7 @@ public class Renderer implements GLEventListener {
 
   public Renderer() {
     camera = new Camera(40, 45, 30);
-    surface = new Surface(-10, 10, -10, 10, 16, 16);
+    surface = new Surface(-10, 10, -10, 10);
     text_renderer = new TextRenderer(new Font("Courier", Font.PLAIN, 14));
   }
 
