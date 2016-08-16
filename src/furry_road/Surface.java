@@ -16,12 +16,13 @@ import com.jogamp.opengl.GL2;
 
 public class Surface {
 
-  public Surface(float min_x, float max_x, float min_y, float max_y,
-                 float min_z, float max_z, int n_nodes_by_x, int n_nodes_by_z) {
+  public Surface(float min_x, float max_x, float min_z, float max_z,
+                 int n_nodes_by_x, int n_nodes_by_z) {
     final float dx = (max_x - min_x) / (n_nodes_by_x - 1);
     final float dz = (max_z - min_z) / (n_nodes_by_z - 1);
 
-    Random rand = new Random();
+    x_limits = new float[]{min_x, max_x};
+    z_limits = new float[]{min_z, max_z};
 
     // Vertices in order: x from max to min, z from min to max for each x.
     // x
@@ -29,12 +30,11 @@ public class Surface {
     // | 2 --> 3
     // | 4 --> 5
     // +------> z
-    float vertices_data[] = new float[n_nodes_by_x * n_nodes_by_z * 3];
+    float vertices_data[] = new float[n_nodes_by_x * n_nodes_by_z * 2];
     int offset = 0;
     for (int x = 0; x < n_nodes_by_x; ++x) {
       for (int z = 0; z < n_nodes_by_z; ++z) {
         vertices_data[offset++] = max_x - x * dx;
-        vertices_data[offset++] = min_y + (max_y - min_y) * rand.nextFloat();
         vertices_data[offset++] = min_z + z * dz;
       }
     }
@@ -44,22 +44,6 @@ public class Surface {
                               .asFloatBuffer();
     coords_buffer.put(vertices_data);
     coords_buffer.position(0);
-
-    // Texture coordinates.
-    float tex_coods_data[] = new float[n_nodes_by_x * n_nodes_by_z * 2];
-    offset = 0;
-    for (int x = 0; x < n_nodes_by_x; ++x) {
-      for (int z = 0; z < n_nodes_by_z; ++z) {
-        tex_coods_data[offset++] = (float)z / (n_nodes_by_z - 1);
-        tex_coods_data[offset++] = (float)x / (n_nodes_by_x - 1);
-      }
-    }
-    tex_coords_buffer = ByteBuffer.allocateDirect(tex_coods_data.length *
-                                                  SIZE_OF_FLOAT)
-                                  .order(ByteOrder.nativeOrder())
-                                  .asFloatBuffer();
-    tex_coords_buffer.put(tex_coods_data);
-    tex_coords_buffer.position(0);
 
     // x  00 -- 01 -- 02 -- 03  target indices: 00, 04, 01, 05, 02, 06, 03, 07,
     // ^   |  /  |  /  |  /  |                  07, 11, 06, 10, 05, 09, 04, 08,
@@ -84,29 +68,6 @@ public class Surface {
                                .asShortBuffer();
     indices_buffer.put(indices);
     indices_buffer.position(0);
-
-    // Normals.
-    float normals_data[] = new float[n_nodes_by_x * n_nodes_by_z * 3];
-    for (int x = 1; x < n_nodes_by_x - 1; ++x) {
-      for (int z = 1; z < n_nodes_by_z - 1; ++z) {
-        offset = 3 * (x * n_nodes_by_z  + z);
-        float top_y = vertices_data[offset - 3 * n_nodes_by_z + 1];
-        float left_y = vertices_data[offset - 3 + 1];
-        float right_y = vertices_data[offset + 3 + 1];
-        float bottom_y = vertices_data[offset + 3 * n_nodes_by_z + 1];
-
-        normals_data[offset] = (top_y - bottom_y) / (2 * dx);
-        normals_data[offset + 1] = 1.0f;
-        normals_data[offset + 2] = (left_y - right_y) / (2 * dx);
-      }
-    }
-    normals_buffer = ByteBuffer.allocateDirect(normals_data.length *
-                                               SIZE_OF_FLOAT)
-                               .order(ByteOrder.nativeOrder())
-                               .asFloatBuffer();
-    normals_buffer.put(normals_data);
-    normals_buffer.position(0);
-
   }
 
   public void InitShaderProgram(GL2 gl) throws Exception {
@@ -114,12 +75,12 @@ public class Surface {
         ShaderFactory.CreateShaderProgram(gl, "shaders/surface_shader.vertex",
                                           "shaders/surface_shader.fragment");
     loc_position = gl.glGetAttribLocation(shader_program, "a_position");
-    loc_normal = gl.glGetAttribLocation(shader_program, "a_normal");
-    loc_tex_coords = gl.glGetAttribLocation(shader_program, "a_tex_coords");
     loc_light = gl.glGetUniformLocation(shader_program, "u_light_vector");
     loc_opacity_map = gl.glGetUniformLocation(shader_program, "u_opacity_map");
     loc_threshold = gl.glGetUniformLocation(shader_program,
                                             "u_opacity_threshold");
+    loc_x_limits = gl.glGetUniformLocation(shader_program, "u_x_limits");
+    loc_z_limits = gl.glGetUniformLocation(shader_program, "u_z_limits");
   }
 
   public void Draw(GL2 gl, float light_vector[], int layer_idx) {
@@ -132,24 +93,17 @@ public class Surface {
     gl.glUniform3fv(loc_light, 1, light_vector, 0);
     gl.glUniform1i(loc_opacity_map, 0);
     gl.glUniform1f(loc_threshold, opacity_thresholds[layer_idx]);
+    gl.glUniform2fv(loc_x_limits, 1, x_limits, 0);
+    gl.glUniform2fv(loc_z_limits, 1, z_limits, 0);
 
     gl.glEnableVertexAttribArray(loc_position);
     gl.glVertexAttribPointer(loc_position, NUM_VERTEX_COORDS, GL2.GL_FLOAT,
                              false, 0, coords_buffer);
 
-    gl.glEnableVertexAttribArray(loc_normal);
-    gl.glVertexAttribPointer(loc_normal, NUM_VERTEX_COORDS, GL2.GL_FLOAT,
-                             false, 0, normals_buffer);
-
-    gl.glEnableVertexAttribArray(loc_tex_coords);
-    gl.glVertexAttribPointer(loc_tex_coords, 2, GL2.GL_FLOAT, false, 0,
-                             tex_coords_buffer);
-
     gl.glBindTexture(GL.GL_TEXTURE_2D, opacity_map_id);
     gl.glDrawElements(GL2.GL_TRIANGLE_STRIP, n_drawing_indices,
                       GL2.GL_UNSIGNED_SHORT, indices_buffer);
 
-    gl.glDisableVertexAttribArray(loc_normal);
     gl.glDisableVertexAttribArray(loc_position);
     gl.glDisable(GL.GL_TEXTURE_2D);
     gl.glDisable(GL2.GL_BLEND);
@@ -206,19 +160,17 @@ public class Surface {
     gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
 
     // Compute mean and max values for thresholds step.
-    int mean = 0, max = 0;
+    int max = 0;
     for (int i = 0; i < dim; ++i) {
       // Byte in [-128, 127]. This means that 127 = 127, 128 = -128, 129 = -127
       int pixel = buffer_data[i];
       if (pixel < 0) {
         pixel += 256;
       }
-      mean += pixel;
       if (pixel > max) {
         max = pixel;
       }
     }
-    mean /= dim;
 
     opacity_thresholds = new float[n_surfaces];
     float threshold_step = (float)max / n_surfaces;
@@ -229,21 +181,21 @@ public class Surface {
 
   private static final int SIZE_OF_FLOAT = 4;
   private static final int SIZE_OF_SHORT = 2;
-  private static final int NUM_VERTEX_COORDS = 3;  // x, y, z.
+  private static final int NUM_VERTEX_COORDS = 2;  // x, z.
 
   private FloatBuffer coords_buffer;
-  private FloatBuffer normals_buffer;
-  private FloatBuffer tex_coords_buffer;
   private ShortBuffer indices_buffer;
   private int shader_program;
   private int loc_position;
-  private int loc_normal;
-  private int loc_tex_coords;
   private int loc_light;
   private int loc_opacity_map;
   private int loc_threshold;
+  private int loc_x_limits;
+  private int loc_z_limits;
   private final int n_drawing_indices;
   private int opacity_map_id;
   private float opacity_thresholds[];
+  private float x_limits[];
+  private float z_limits[];
 
 }
