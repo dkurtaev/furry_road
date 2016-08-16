@@ -3,6 +3,9 @@ uniform float u_opacity_threshold;
 uniform vec3 u_light_vector;
 uniform vec2 u_x_limits;
 uniform vec2 u_z_limits;
+uniform float u_surfaces_step;
+uniform int u_num_layers_above;
+uniform float u_opacity_threshold_step;
 
 varying vec2 v_position;
 varying vec4 v_color;
@@ -17,6 +20,48 @@ void main() {
   }
   gl_FragColor = v_color;
   gl_FragColor[3] = alpha;
+  
+  // Compute shadow.                   ______
+  //        ^                          \     |n   angl = dot(n_normal, -n_light)
+  //    \   | plane's normal           l\angl|o				  
+  //     \  |                           i\   |r
+  //      \ |                            g\  |m
+  // light v|                             h\^|a
+  // -------*-------- plane                t\|l
+  //
+  //
+  // --^----p3-*-------------- layer 2     d - constant distance between layers.
+  // d |        \ <- light vector
+  // --x------p2-*------------ layer 1
+  // d |          \
+  // --v--------p1-*---------- layer 0
+  //               ^
+  //               | current fragment
+  //
+  // Point p2 is p1 - L * light, where L = d / cos(angl)
+  
+  float cos_angle = -normalize(u_light_vector).y;
+  float step_by_light = u_surfaces_step / cos_angle;
+  vec2 shifted_position = v_position - step_by_light * vec2(u_light_vector[0],
+                                                            u_light_vector[2]);
+  vec2 shifted_tex_coords = GetTexCoords(shifted_position);
+  vec2 tex_coords_delta = shifted_tex_coords - tex_coords;
+  
+  for (int i = 0; i < u_num_layers_above; ++i) {
+  	if (0.0 <= shifted_tex_coords[0] && shifted_tex_coords[0] <= 1.0 &&
+  		0.0 <= shifted_tex_coords[1] && shifted_tex_coords[1] <= 1.0) {
+  	  alpha = texture2D(u_opacity_map, shifted_tex_coords)[0];
+  	  float threshold = u_opacity_threshold +
+  	  					(float(i) + 1.0) * u_opacity_threshold_step;
+      if (alpha >= threshold) {
+        gl_FragColor = vec4(0.0, 0.0, 0.0, gl_FragColor[3]);
+	    break;
+	  }
+  	  shifted_tex_coords += tex_coords_delta;
+  	} else {
+  	  break;
+  	} 	
+  }
 }
 
 vec2 GetTexCoords(vec2 position) {

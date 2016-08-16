@@ -81,6 +81,13 @@ public class Surface {
                                             "u_opacity_threshold");
     loc_x_limits = gl.glGetUniformLocation(shader_program, "u_x_limits");
     loc_z_limits = gl.glGetUniformLocation(shader_program, "u_z_limits");
+
+    loc_surfaces_step = gl.glGetUniformLocation(shader_program,
+                                                "u_surfaces_step");
+    loc_num_layers_above = gl.glGetUniformLocation(shader_program,
+                                                   "u_num_layers_above");
+    loc_opacity_threshold_step =
+        gl.glGetUniformLocation(shader_program, "u_opacity_threshold_step");
   }
 
   public void Draw(GL2 gl, float light_vector[], int layer_idx) {
@@ -95,6 +102,11 @@ public class Surface {
     gl.glUniform1f(loc_threshold, opacity_thresholds[layer_idx]);
     gl.glUniform2fv(loc_x_limits, 1, x_limits, 0);
     gl.glUniform2fv(loc_z_limits, 1, z_limits, 0);
+
+    gl.glUniform1f(loc_surfaces_step, 0.05f);
+    gl.glUniform1i(loc_num_layers_above, 49 - layer_idx);
+    gl.glUniform1f(loc_opacity_threshold_step, opacity_thresholds[1] -
+                                               opacity_thresholds[0]);
 
     gl.glEnableVertexAttribArray(loc_position);
     gl.glVertexAttribPointer(loc_position, NUM_VERTEX_COORDS, GL2.GL_FLOAT,
@@ -192,6 +204,10 @@ public class Surface {
   private int loc_threshold;
   private int loc_x_limits;
   private int loc_z_limits;
+  private int loc_surfaces_step;
+  private int loc_num_layers_above;
+  private int loc_opacity_threshold_step;
+
   private final int n_drawing_indices;
   private int opacity_map_id;
   private float opacity_thresholds[];
