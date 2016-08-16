@@ -11,7 +11,7 @@ public class Renderer implements GLEventListener {
 
   public Renderer() {
     camera = new Camera(40, 45, 30);
-    surface = new Surface(-10, 10, -10, 10);
+    surface = new Surface(-10, 10, -10, 10, light_vector, surfaces_shift);
     text_renderer = new TextRenderer(new Font("Courier", Font.PLAIN, 14));
   }
 
@@ -48,7 +48,7 @@ public class Renderer implements GLEventListener {
 
     gl.glColor3f(0.5f, 0.8f, 0.3f);
     for (int i = 0; i < n_surfaces; ++i) {
-      surface.Draw(gl, new float[]{-1.0f, -1.0f, -1.0f}, i);
+      surface.Draw(gl, i, surfaces_shift, n_surfaces);
       gl.glTranslatef(0.0f, surfaces_shift, 0.0f);
     }
 
@@ -85,8 +85,9 @@ public class Renderer implements GLEventListener {
   private int view_width;
   private int view_height;
   private Surface surface;
-  private static final float surfaces_shift = 0.05f;
-  private static final int n_surfaces = 50;
+  private static final float surfaces_shift = 0.025f;
+  private static final int n_surfaces = 100;
+  private static final float light_vector[] = {-1f, -1f, -1f};
   // Number of frames after which updates FPS counter.
   private static final int n_frames_for_fps = 30;
   private TextRenderer text_renderer;

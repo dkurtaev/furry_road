@@ -1,53 +1,23 @@
 uniform sampler2D u_opacity_map;
 uniform float u_opacity_threshold;
-uniform vec3 u_light_vector;
-uniform vec2 u_x_limits;
-uniform vec2 u_z_limits;
-uniform float u_surfaces_step;
 uniform int u_num_layers_above;
 uniform int u_n_layers;
 uniform float u_opacity_threshold_step;
+uniform vec2 u_tex_coords_shift;
 
 varying vec2 v_position;
 varying vec4 v_color;
-
-vec2 GetTexCoords(vec2 position);
+varying vec2 v_tex_coords;
 
 void main() {
-  vec2 tex_coords = GetTexCoords(v_position);
-  float alpha = texture2D(u_opacity_map, tex_coords)[0];
+  float alpha = texture2D(u_opacity_map, v_tex_coords)[0];
   if (alpha < u_opacity_threshold) {
     alpha = 0.0;
   }
   gl_FragColor = v_color;
   gl_FragColor[3] = alpha;
   
-  // Compute shadow.                   ______
-  //        ^                          \     |n   angl = dot(n_normal, -n_light)
-  //    \   | plane's normal           l\angl|o				  
-  //     \  |                           i\   |r
-  //      \ |                            g\  |m
-  // light v|                             h\^|a
-  // -------*-------- plane                t\|l
-  //
-  //
-  // --^----p3-*-------------- layer 2     d - constant distance between layers.
-  // d |        \ <- light vector
-  // --x------p2-*------------ layer 1
-  // d |          \
-  // --v--------p1-*---------- layer 0
-  //               ^
-  //               | current fragment
-  //
-  // Point p2 is p1 - L * light, where L = d / cos(angl)
-  
-  float cos_angle = -normalize(u_light_vector).y;
-  float step_by_light = u_surfaces_step / cos_angle;
-  vec2 shifted_position = v_position -step_by_light * vec2(u_light_vector[0],
-                                                           u_light_vector[2]);
-  vec2 shifted_tex_coords = GetTexCoords(shifted_position);
-  vec2 tex_coords_delta = shifted_tex_coords - tex_coords;
-  
+  vec2 shifted_tex_coords = v_tex_coords + u_tex_coords_shift;
   for (int i = 0; i < u_num_layers_above; ++i) {
   	if (0.0 <= shifted_tex_coords[0] && shifted_tex_coords[0] <= 1.0 &&
   		0.0 <= shifted_tex_coords[1] && shifted_tex_coords[1] <= 1.0) {
@@ -63,15 +33,9 @@ void main() {
         gl_FragColor[3] = alpha;
 	    break;
 	  }
-  	  shifted_tex_coords += tex_coords_delta;
+  	  shifted_tex_coords += u_tex_coords_shift;
   	} else {
   	  break;
   	} 	
   }
-}
-
-vec2 GetTexCoords(vec2 position) {
-  float u = (position[1] - u_z_limits[0]) / (u_z_limits[1] - u_z_limits[0]);
-  float v = (position[0] - u_x_limits[0]) / (u_x_limits[1] - u_x_limits[0]);
-  return vec2(u, v);
 }

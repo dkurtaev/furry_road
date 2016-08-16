@@ -13,56 +13,79 @@ import com.jogamp.opengl.GL2;
 
 public class Surface {
 
-  public Surface(float min_x, float max_x, float min_z, float max_z) {
+  public Surface(float min_x, float max_x, float min_z, float max_z,
+                 float light_vector[], float surfaces_shift) {
     x_limits = new float[]{min_x, max_x};
     z_limits = new float[]{min_z, max_z};
+
+    // Compute shadow.                 ______
+    //        ^                        \     |n   angl = dot(n_normal, -n_light)
+    //    \   | plane's normal         l\angl|o
+    //     \  |                         i\   |r
+    //      \ |                          g\  |m
+    // light v|                           h\^|a
+    // -------*-------- plane              t\|l
+    //
+    //
+    // --^----p3-*-------------- layer 2   d - constant distance between layers.
+    // d |        \ <- light vector
+    // --x------p2-*------------ layer 1
+    // d |          \
+    // --v--------p1-*---------- layer 0
+    //               ^
+    //               | current fragment
+    //
+    // Point p2 is p1 - L * light, where L = d / cos(angl)
+    // Compute shift of corresponding texture coordinates.
+    float light_vec_norm = (float)Math.sqrt(light_vector[0] * light_vector[0] +
+                                            light_vector[1] * light_vector[1] +
+                                            light_vector[2] * light_vector[2]);
+    float cos_angle = -light_vector[1] / light_vec_norm;
+    float step_by_light = surfaces_shift / cos_angle;
+    float position_shift[] = {-step_by_light * light_vector[0],
+                              -step_by_light * light_vector[2]};
+    texture_shift = new float[]{position_shift[1] / (max_z - min_z),
+                                position_shift[0] / (max_x - min_x)};
   }
 
   public void InitShaderProgram(GL2 gl) throws Exception {
     shader_program =
         ShaderFactory.CreateShaderProgram(gl, "shaders/surface_shader.vertex",
                                           "shaders/surface_shader.fragment");
-    loc_light = gl.glGetUniformLocation(shader_program, "u_light_vector");
     loc_opacity_map = gl.glGetUniformLocation(shader_program, "u_opacity_map");
     loc_threshold = gl.glGetUniformLocation(shader_program,
                                             "u_opacity_threshold");
-    loc_x_limits = gl.glGetUniformLocation(shader_program, "u_x_limits");
-    loc_z_limits = gl.glGetUniformLocation(shader_program, "u_z_limits");
-
-    loc_surfaces_step = gl.glGetUniformLocation(shader_program,
-                                                "u_surfaces_step");
     loc_num_layers_above = gl.glGetUniformLocation(shader_program,
                                                    "u_num_layers_above");
     loc_opacity_threshold_step =
         gl.glGetUniformLocation(shader_program, "u_opacity_threshold_step");
     loc_n_layers = gl.glGetUniformLocation(shader_program, "u_n_layers");
+    loc_tex_coords_shift = gl.glGetUniformLocation(shader_program,
+                                                   "u_tex_coords_shift");
   }
 
-  public void Draw(GL2 gl, float light_vector[], int layer_idx) {
+  public void Draw(GL2 gl, int layer_idx, float surfaces_shift, int n_layers) {
     gl.glUseProgram(shader_program);
     gl.glEnable(GL.GL_TEXTURE_2D);
     gl.glEnable(GL2.GL_BLEND);
     gl.glBlendFunc(GL2.GL_SRC_ALPHA, GL2.GL_ONE_MINUS_SRC_ALPHA);
     gl.glEnable(GL2.GL_ALPHA_TEST);
 
-    gl.glUniform3fv(loc_light, 1, light_vector, 0);
     gl.glUniform1i(loc_opacity_map, 0);
     gl.glUniform1f(loc_threshold, opacity_thresholds[layer_idx]);
-    gl.glUniform2fv(loc_x_limits, 1, x_limits, 0);
-    gl.glUniform2fv(loc_z_limits, 1, z_limits, 0);
+    gl.glUniform2fv(loc_tex_coords_shift, 1, texture_shift, 0);
 
-    gl.glUniform1f(loc_surfaces_step, 0.05f);
-    gl.glUniform1i(loc_num_layers_above, 49 - layer_idx);
+    gl.glUniform1i(loc_num_layers_above, n_layers - layer_idx - 1);
     gl.glUniform1f(loc_opacity_threshold_step, opacity_thresholds[1] -
                                                opacity_thresholds[0]);
-    gl.glUniform1i(loc_n_layers, 50);
+    gl.glUniform1i(loc_n_layers, n_layers);
 
     gl.glBindTexture(GL.GL_TEXTURE_2D, opacity_map_id);
     gl.glBegin(GL2.GL_QUADS);
-      gl.glVertex3f(x_limits[0], 0f, z_limits[0]);
-      gl.glVertex3f(x_limits[0], 0f, z_limits[1]);
-      gl.glVertex3f(x_limits[1], 0f, z_limits[1]);
-      gl.glVertex3f(x_limits[1], 0f, z_limits[0]);
+      gl.glTexCoord2f(0f, 0f); gl.glVertex3f(x_limits[0], 0f, z_limits[0]);
+      gl.glTexCoord2f(1f, 0f); gl.glVertex3f(x_limits[0], 0f, z_limits[1]);
+      gl.glTexCoord2f(1f, 1f); gl.glVertex3f(x_limits[1], 0f, z_limits[1]);
+      gl.glTexCoord2f(0f, 1f); gl.glVertex3f(x_limits[1], 0f, z_limits[0]);
     gl.glEnd();
 
     gl.glDisable(GL.GL_TEXTURE_2D);
@@ -144,18 +167,16 @@ public class Surface {
   }
 
   private int shader_program;
-  private int loc_light;
   private int loc_opacity_map;
   private int loc_threshold;
-  private int loc_x_limits;
-  private int loc_z_limits;
-  private int loc_surfaces_step;
   private int loc_num_layers_above;
   private int loc_opacity_threshold_step;
   private int loc_n_layers;
+  private int loc_tex_coords_shift;
   private int opacity_map_id;
   private float opacity_thresholds[];
   private float x_limits[];
   private float z_limits[];
+  private float texture_shift[];
 
 }
