@@ -10,11 +10,12 @@ varying vec4 v_color;
 varying vec2 v_tex_coords;
 
 void main() {
+  gl_FragColor = v_color;
   float alpha = texture2D(u_opacity_map, v_tex_coords)[0];
   if (alpha < u_opacity_threshold) {
-    alpha = 0.0;
+    gl_FragColor[3] = 0.0;
+    return;
   }
-  gl_FragColor = v_color;
   gl_FragColor[3] = alpha;
   
   vec2 shifted_tex_coords = v_tex_coords + u_tex_coords_shift;
