@@ -2,6 +2,7 @@ package furry_road;
 
 import java.awt.Font;
 
+import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
@@ -13,13 +14,15 @@ public class Renderer implements GLEventListener {
     camera = new Camera(40, 45, 30);
     surface = new Surface(-10, 10, -10, 10, light_vector, surfaces_shift);
     text_renderer = new TextRenderer(new Font("Courier", Font.PLAIN, 14));
+    light = new LightOrb(15f);
   }
 
   @Override
   public void init(GLAutoDrawable drawable) {
     GL2 gl = drawable.getGL().getGL2();
+    gl.glEnable(GL.GL_DEPTH_TEST);
 
-    gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    gl.glClearColor(0f, 0f, 0f, 1f);
 
     try {
       surface.InitShaderProgram(gl);
@@ -39,7 +42,7 @@ public class Renderer implements GLEventListener {
   public void display(GLAutoDrawable drawable) {
     GL2 gl = drawable.getGL().getGL2();
 
-    gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
+    gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 
     camera.Setup(gl, view_width, view_height);
 
@@ -57,6 +60,8 @@ public class Renderer implements GLEventListener {
     int fps = (int)drawable.getAnimator().getLastFPS();
     text_renderer.draw("fps: " + fps, 0, 8);
     text_renderer.endRendering();
+
+    light.Draw(gl);
   }
 
   @Override
@@ -91,5 +96,6 @@ public class Renderer implements GLEventListener {
   // Number of frames after which updates FPS counter.
   private static final int n_frames_for_fps = 30;
   private TextRenderer text_renderer;
+  private LightOrb light;
 
 }
