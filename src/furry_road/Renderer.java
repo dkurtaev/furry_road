@@ -27,7 +27,7 @@ public class Renderer implements GLEventListener {
       e.printStackTrace();
     }
 
-    surface.GenerateOpacityMap(gl, n_surfaces);
+    surface.GenerateOpacityMap(gl, n_surfaces, light_vector, surfaces_shift);
 
     drawable.getAnimator().setUpdateFPSFrames(n_frames_for_fps, null);
   }
