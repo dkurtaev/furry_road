@@ -1,26 +1,9 @@
 uniform sampler2D u_opacity_map;
-uniform float u_opacity_threshold;
-uniform vec3 u_light_vector;
-uniform vec2 u_x_limits;
-uniform vec2 u_z_limits;
 
-varying vec2 v_position;
+varying vec2 v_tex_coords;
 varying vec4 v_color;
 
-vec2 GetTexCoords(vec2 position);
-
 void main() {
-  vec2 tex_coords = GetTexCoords(v_position);
-  float alpha = texture2D(u_opacity_map, tex_coords)[0];
-  if (alpha < u_opacity_threshold) {
-    alpha = 0.0;
-  }
   gl_FragColor = v_color;
-  gl_FragColor[3] = alpha;
-}
-
-vec2 GetTexCoords(vec2 position) {
-  float u = (position[1] - u_z_limits[0]) / (u_z_limits[1] - u_z_limits[0]);
-  float v = (position[0] - u_x_limits[0]) / (u_x_limits[1] - u_x_limits[0]);
-  return vec2(u, v);
+  gl_FragColor[3] = texture2D(u_opacity_map, v_tex_coords)[0];
 }

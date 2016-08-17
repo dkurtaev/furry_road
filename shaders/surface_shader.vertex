@@ -1,8 +1,8 @@
-varying vec2 v_position;
+varying vec2 v_tex_coords;
 varying vec4 v_color;
 
 void main() {
-  v_position = vec2(gl_Vertex[0], gl_Vertex[2]);
   v_color = gl_Color;
+  v_tex_coords = gl_MultiTexCoord0.xy;
   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex;
 }
