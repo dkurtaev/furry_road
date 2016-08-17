@@ -1,5 +1,6 @@
 package furry_road;
 
+import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.nio.ByteBuffer;
@@ -47,13 +48,14 @@ public class Surface {
     gl.glUseProgram(0);
   }
 
-  public void GenerateOpacityMap(GL2 gl, int n_surfaces) {
+  public void GenerateOpacityMap(GL2 gl) {
     final int width = 256;
     final int height = 256;
+    final float min_length = 0.9f;
+    final float max_length = 1.0f;
     final float fur_dencity = 0.1f;
 
-    final int dim = width * height;
-    final int n_seeds = (int)(dim * fur_dencity);
+    final int n_seeds = (int)(width * height * fur_dencity);
 
     BufferedImage texture = new BufferedImage(width, height,
                                               BufferedImage.TYPE_BYTE_GRAY);
@@ -64,7 +66,9 @@ public class Surface {
       }
     }
     for (int i = 0; i < n_seeds; ++i) {
-      texture.setRGB(rand.nextInt(width), rand.nextInt(height), 0xFFFFFFFF);
+      float length = rand.nextFloat() * (max_length - min_length) + min_length;
+      Color color = new Color(length, length, length);
+      texture.setRGB(rand.nextInt(width), rand.nextInt(height), color.getRGB());
     }
 
     opacity_map_id = GenGreyscaleTexture(gl, texture);

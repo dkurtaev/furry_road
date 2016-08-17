@@ -5,6 +5,11 @@ varying vec2 v_tex_coords;
 varying vec4 v_color;
 
 void main() {
-  gl_FragColor = v_color * u_layer_depth;
-  gl_FragColor[3] = texture2D(u_opacity_map, v_tex_coords)[0];
+  float depth = texture2D(u_opacity_map, v_tex_coords)[0];
+  if (depth >= u_layer_depth) {
+    gl_FragColor = v_color * u_layer_depth;
+    gl_FragColor[3] = 1.0;
+  } else {
+    gl_FragColor = vec4(0.0);
+  }
 }
