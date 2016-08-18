@@ -27,7 +27,7 @@ public class Renderer implements GLEventListener {
       e.printStackTrace();
     }
 
-    surface.GenerateOpacityMap(gl, n_surfaces);
+    surface.GenerateOpacityMap(gl);
 
     drawable.getAnimator().setUpdateFPSFrames(n_frames_for_fps, null);
   }
@@ -48,7 +48,7 @@ public class Renderer implements GLEventListener {
 
     gl.glColor3f(0.5f, 0.8f, 0.3f);
     for (int i = 0; i < n_surfaces; ++i) {
-      surface.Draw(gl, new float[]{-1.0f, -1.0f, -1.0f}, i);
+      surface.Draw(gl, new float[]{-1.0f, -1.0f, -1.0f}, i, n_surfaces);
       gl.glTranslatef(0.0f, surfaces_shift, 0.0f);
     }
 
@@ -85,7 +85,7 @@ public class Renderer implements GLEventListener {
   private int view_width;
   private int view_height;
   private Surface surface;
-  private static final float surfaces_shift = 0.05f;
+  private static final float surfaces_shift = 0.025f;
   private static final int n_surfaces = 50;
   // Number of frames after which updates FPS counter.
   private static final int n_frames_for_fps = 30;
