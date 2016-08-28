@@ -3,8 +3,11 @@ package furry_road;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Random;
+
+import javax.imageio.ImageIO;
 
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
@@ -65,12 +68,14 @@ public class Surface {
     final int height = 256;
     final float min_length = 0.9f;
     final float max_length = 1.0f;
-    final float fur_dencity = 0.1f;
+    final float fur_dencity = 0.5f;
 
     final int n_seeds = (int)(width * height * fur_dencity);
 
     BufferedImage texture = new BufferedImage(width, height,
                                               BufferedImage.TYPE_BYTE_GRAY);
+    BufferedImage fur = ImageIO.read(new File("/home/dkurtaev/Downloads/fur.png"));
+
     Random rand = new Random();
     for (int x = 0; x < width; ++x) {
       for (int y = 0; y < height; ++y) {
@@ -81,6 +86,16 @@ public class Surface {
       float length = rand.nextFloat() * (max_length - min_length) + min_length;
       Color color = new Color(length, length, length);
       texture.setRGB(rand.nextInt(width), rand.nextInt(height), color.getRGB());
+    }
+
+    for (int x = 0; x < width; ++x) {
+      for (int y = 0; y < height; ++y) {
+        int rel_x = (int)(((float)x / (width - 1)) * (fur.getWidth() - 1));
+        int rel_y = (int)(((float)y / (height - 1)) * (fur.getHeight() - 1));
+        if (fur.getRGB(rel_x, rel_y) == 0xFF000000) {
+          texture.setRGB(x, y, 0xFF000000);
+        }
+      }
     }
 
     opacity_map_id = GenTexture(gl, texture);
