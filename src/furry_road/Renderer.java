@@ -1,7 +1,11 @@
 package furry_road;
 
 import java.awt.Font;
+import java.io.File;
 
+import javax.imageio.ImageIO;
+
+import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
 import com.jogamp.opengl.GLAutoDrawable;
 import com.jogamp.opengl.GLEventListener;
@@ -20,14 +24,14 @@ public class Renderer implements GLEventListener {
     GL2 gl = drawable.getGL().getGL2();
 
     gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+    gl.glEnable(GL2.GL_DEPTH_TEST);
 
     try {
-      surface.InitShaderProgram(gl);
+      surface.Init(gl);
+      color_texture_id = Surface.GenTexture(gl, ImageIO.read(new File("/home/dkurtaev/Downloads/character_jump.png")));
     } catch (Exception e) {
       e.printStackTrace();
     }
-
-    surface.GenerateOpacityMap(gl);
 
     drawable.getAnimator().setUpdateFPSFrames(n_frames_for_fps, null);
   }
@@ -39,18 +43,30 @@ public class Renderer implements GLEventListener {
   public void display(GLAutoDrawable drawable) {
     GL2 gl = drawable.getGL().getGL2();
 
-    gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
+    gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
 
     camera.Setup(gl, view_width, view_height);
 
     gl.glMatrixMode(GL2.GL_MODELVIEW);
     gl.glLoadIdentity();
 
-    gl.glColor3f(0.5f, 0.8f, 0.3f);
+    gl.glColor3f(1f, 1f, 1f);
+    gl.glEnable(GL.GL_TEXTURE_2D);
+    gl.glBindTexture(GL2.GL_TEXTURE_2D, color_texture_id);
+    gl.glBegin(GL2.GL_QUADS);
+      gl.glTexCoord2f(1f, 0f); gl.glVertex3f(-10, 0f, -10);
+      gl.glTexCoord2f(0f, 0f); gl.glVertex3f(-10, 0f, 10);
+      gl.glTexCoord2f(0f, 1f); gl.glVertex3f(10, 0f, 10);
+      gl.glTexCoord2f(1f, 1f); gl.glVertex3f(10, 0f, -10);
+    gl.glEnd();
+    gl.glBindTexture(GL2.GL_TEXTURE_2D, 0);
+
+    gl.glPushMatrix();
     for (int i = 0; i < n_surfaces; ++i) {
-      surface.Draw(gl, new float[]{-1.0f, -1.0f, -1.0f}, i, n_surfaces);
-      gl.glTranslatef(0.0f, surfaces_shift, 0.0f);
+      surface.Draw(gl, i, n_surfaces, color_texture_id);
+      gl.glTranslatef(0.015f, surfaces_shift, -0.015f);
     }
+    gl.glPopMatrix();
 
     text_renderer.beginRendering(view_width, view_height);
     text_renderer.setColor(0, 1, 0, 1);
@@ -90,5 +106,5 @@ public class Renderer implements GLEventListener {
   // Number of frames after which updates FPS counter.
   private static final int n_frames_for_fps = 30;
   private TextRenderer text_renderer;
-
+  private int color_texture_id;
 }

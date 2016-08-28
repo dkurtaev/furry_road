@@ -16,15 +16,12 @@ public class Surface {
     z_limits = new float[]{min_z, max_z};
   }
 
-  public void InitShaderProgram(GL2 gl) throws Exception {
-    shader_program =
-        ShaderFactory.CreateShaderProgram(gl, "shaders/surface_shader.vertex",
-                                          "shaders/surface_shader.fragment");
-    loc_opacity_map = gl.glGetUniformLocation(shader_program, "u_opacity_map");
-    loc_layer_depth = gl.glGetUniformLocation(shader_program, "u_layer_depth");
+  public void Init(GL2 gl) throws Exception {
+    InitShaderProgram(gl);
+    GenerateOpacityMap(gl);
   }
 
-  public void Draw(GL2 gl, float light_vector[], int layer_idx, int n_layers) {
+  public void Draw(GL2 gl, int layer_idx, int n_layers, int color_texture_id) {
     gl.glUseProgram(shader_program);
     gl.glEnable(GL.GL_TEXTURE_2D);
     gl.glEnable(GL2.GL_BLEND);
@@ -32,14 +29,19 @@ public class Surface {
     gl.glEnable(GL2.GL_ALPHA_TEST);
 
     gl.glUniform1i(loc_opacity_map, 0);
+    gl.glUniform1i(loc_color_texture, 1);
     gl.glUniform1f(loc_layer_depth, (float)layer_idx / (n_layers - 1));
 
+    gl.glActiveTexture(GL.GL_TEXTURE1);
+    gl.glBindTexture(GL.GL_TEXTURE_2D, color_texture_id);
+
+    gl.glActiveTexture(GL.GL_TEXTURE0);
     gl.glBindTexture(GL.GL_TEXTURE_2D, opacity_map_id);
     gl.glBegin(GL2.GL_QUADS);
-      gl.glTexCoord2f(0f, 0f); gl.glVertex3f(x_limits[0], 0f, z_limits[0]);
-      gl.glTexCoord2f(1f, 0f); gl.glVertex3f(x_limits[0], 0f, z_limits[1]);
-      gl.glTexCoord2f(1f, 1f); gl.glVertex3f(x_limits[1], 0f, z_limits[1]);
-      gl.glTexCoord2f(0f, 1f); gl.glVertex3f(x_limits[1], 0f, z_limits[0]);
+      gl.glTexCoord2f(1f, 0f); gl.glVertex3f(x_limits[0], 0f, z_limits[0]);
+      gl.glTexCoord2f(0f, 0f); gl.glVertex3f(x_limits[0], 0f, z_limits[1]);
+      gl.glTexCoord2f(0f, 1f); gl.glVertex3f(x_limits[1], 0f, z_limits[1]);
+      gl.glTexCoord2f(1f, 1f); gl.glVertex3f(x_limits[1], 0f, z_limits[0]);
     gl.glEnd();
 
     gl.glDisable(GL.GL_TEXTURE_2D);
@@ -48,7 +50,17 @@ public class Surface {
     gl.glUseProgram(0);
   }
 
-  public void GenerateOpacityMap(GL2 gl) {
+  private void InitShaderProgram(GL2 gl) throws Exception {
+    shader_program =
+        ShaderFactory.CreateShaderProgram(gl, "shaders/surface_vertex.glsl",
+                                          "shaders/surface_fragment.glsl");
+    loc_opacity_map = gl.glGetUniformLocation(shader_program, "u_opacity_map");
+    loc_layer_depth = gl.glGetUniformLocation(shader_program, "u_layer_depth");
+    loc_color_texture = gl.glGetUniformLocation(shader_program,
+                                                "u_color_texture");
+  }
+
+  private void GenerateOpacityMap(GL2 gl) throws Exception {
     final int width = 256;
     final int height = 256;
     final float min_length = 0.9f;
@@ -71,10 +83,11 @@ public class Surface {
       texture.setRGB(rand.nextInt(width), rand.nextInt(height), color.getRGB());
     }
 
-    opacity_map_id = GenGreyscaleTexture(gl, texture);
+    opacity_map_id = GenTexture(gl, texture);
   }
 
-  private static int GenGreyscaleTexture(GL2 gl, BufferedImage texture) {
+  public static int GenTexture(GL2 gl, BufferedImage texture)
+      throws Exception {
     final int width = texture.getWidth();
     final int height = texture.getHeight();
 
@@ -95,8 +108,24 @@ public class Surface {
     pixels.put(buffer_data);
     pixels.position(0);
 
-    gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, 1, width, height, 0, GL2.GL_RED,
-                    GL.GL_UNSIGNED_BYTE, pixels);
+    final int n_channels = buffer_data.length / (width * height);
+    switch (n_channels) {
+      case 1: {
+        gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, 1, width, height, 0, GL2.GL_RED,
+                        GL.GL_UNSIGNED_BYTE, pixels);
+        break;
+      }
+      case 3: {
+        gl.glTexImage2D(GL.GL_TEXTURE_2D, 0, 3, width, height, 0, GL2.GL_BGR,
+                        GL.GL_UNSIGNED_BYTE, pixels);
+        break;
+      }
+      default: {
+        throw new Exception ("Texture has " + n_channels +
+                             " channels (supports 3 or 1).");
+      }
+    };
+
     gl.glBindTexture(GL.GL_TEXTURE_2D, 0);
     return ids[0];
   }
@@ -109,5 +138,6 @@ public class Surface {
   private int shader_program;
   private int loc_opacity_map;
   private int loc_layer_depth;
+  private int loc_color_texture;
 
 }
