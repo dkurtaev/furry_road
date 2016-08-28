@@ -18,9 +18,9 @@ public class Camera {
     final float aspect = ((float)view_width) / view_height;
 
     final float cos_azimuth = (float)Math.cos(Math.toRadians(azimuth));
-    final float sin_azimuth = (float)Math.sin(Math.toRadians(azimuth));
+    final float sin_azimuth = (float)Math.sqrt(1f - cos_azimuth * cos_azimuth);
     final float cos_zenith = (float)Math.cos(Math.toRadians(zenith));
-    final float sin_zenith = (float)Math.sin(Math.toRadians(zenith));
+    final float sin_zenith = (float)Math.sqrt(1f - cos_zenith * cos_zenith);
 
     final float camera_x = radius * sin_azimuth * cos_zenith;
     final float camera_y = radius * sin_zenith;
@@ -34,8 +34,8 @@ public class Camera {
     glu.gluLookAt(camera_x, camera_y, camera_z, 0, 0, 0, 0, 1, 0);
   }
 
-  public void ChangeAzimuth(boolean increment) {
-    azimuth += azimuth_inc * (increment ? 1f : -1f);
+  public void IncrementAzimuth(float multiplicator) {
+    azimuth += azimuth_inc * multiplicator;
     if (azimuth < 0.0f) {
       azimuth += 360f;
     }
@@ -44,13 +44,13 @@ public class Camera {
     }
   }
 
-  public void ChangeZenith(boolean increment) {
-    zenith += zenith_inc * (increment ? 1f : -1f);
+  public void IncrementZenith(float multiplicator) {
+    zenith += zenith_inc * multiplicator;
     zenith = Math.max(-89f, Math.min(zenith, 89f));
   }
 
-  public void ChangeRadius(boolean increment) {
-    radius += radius_inc * (increment ? 1f : -1f);
+  public void IncrementRadius(float multiplicator) {
+    radius += radius_inc * multiplicator;
     radius = Math.max(0f, radius);
   }
 

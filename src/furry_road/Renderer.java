@@ -85,16 +85,16 @@ public class Renderer implements GLEventListener {
 
   public void KeyPressed(int key_code) {
     switch (key_code) {
-      case 37: camera.ChangeAzimuth(false); break;  // Left arrow.
-      case 38: camera.ChangeZenith(true); break;  // Up arrow.
-      case 39: camera.ChangeAzimuth(true); break;  // Right arrow.
-      case 40: camera.ChangeZenith(false); break;  // Down arrow.
+      case 37: camera.IncrementAzimuth(-1f); break;  // Left arrow.
+      case 38: camera.IncrementZenith(1f); break;  // Up arrow.
+      case 39: camera.IncrementAzimuth(1f); break;  // Right arrow.
+      case 40: camera.IncrementZenith(-1f); break;  // Down arrow.
       default: break;
     }
   }
 
   public void WheelRotation(int rotation) {
-    camera.ChangeRadius(rotation > 0);
+    camera.IncrementRadius(rotation > 0 ? 1f : -1f);
   }
 
   private Camera camera;
