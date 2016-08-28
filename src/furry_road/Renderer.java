@@ -1,9 +1,6 @@
 package furry_road;
 
 import java.awt.Font;
-import java.io.File;
-
-import javax.imageio.ImageIO;
 
 import com.jogamp.opengl.GL;
 import com.jogamp.opengl.GL2;
@@ -21,6 +18,9 @@ public class Renderer implements GLEventListener {
 
   @Override
   public void init(GLAutoDrawable drawable) {
+    final String texture_path = "/home/dkurtaev/Downloads/character_jump.png";
+    final String fur_places_path = "/home/dkurtaev/Downloads/fur.png";
+
     GL2 gl = drawable.getGL().getGL2();
 
     gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -28,7 +28,8 @@ public class Renderer implements GLEventListener {
 
     try {
       surface.Init(gl);
-      color_texture_id = Surface.GenTexture(gl, ImageIO.read(new File("/home/dkurtaev/Downloads/character_jump.png")));
+      texture_id = TextureFactory.GenTexture(gl, texture_path);
+      fur_places_texture_id = TextureFactory.GenTexture(gl, fur_places_path);
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -52,7 +53,7 @@ public class Renderer implements GLEventListener {
 
     gl.glColor3f(1f, 1f, 1f);
     gl.glEnable(GL.GL_TEXTURE_2D);
-    gl.glBindTexture(GL2.GL_TEXTURE_2D, color_texture_id);
+    gl.glBindTexture(GL2.GL_TEXTURE_2D, texture_id);
     gl.glBegin(GL2.GL_QUADS);
       gl.glTexCoord2f(1f, 0f); gl.glVertex3f(-10, 0f, -10);
       gl.glTexCoord2f(0f, 0f); gl.glVertex3f(-10, 0f, 10);
@@ -63,7 +64,8 @@ public class Renderer implements GLEventListener {
 
     gl.glPushMatrix();
     for (int i = 0; i < n_surfaces; ++i) {
-      surface.Draw(gl, i, n_surfaces, color_texture_id);
+      surface.Draw(gl, (float)i / (n_surfaces - 1), texture_id,
+                   fur_places_texture_id);
       gl.glTranslatef(0.015f, surfaces_shift, -0.015f);
     }
     gl.glPopMatrix();
@@ -106,5 +108,6 @@ public class Renderer implements GLEventListener {
   // Number of frames after which updates FPS counter.
   private static final int n_frames_for_fps = 30;
   private TextRenderer text_renderer;
-  private int color_texture_id;
+  private int texture_id;
+  private int fur_places_texture_id;
 }
