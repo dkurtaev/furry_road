@@ -11,7 +11,6 @@ import com.jogamp.opengl.util.awt.TextRenderer;
 public class Renderer implements GLEventListener {
 
   public Renderer() {
-    camera = new Camera(40, 45, 30);
     surface = new Surface(-10, 10, -10, 10);
     text_renderer = new TextRenderer(new Font("Courier", Font.PLAIN, 14));
   }
@@ -24,7 +23,6 @@ public class Renderer implements GLEventListener {
     GL2 gl = drawable.getGL().getGL2();
 
     gl.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-    gl.glEnable(GL2.GL_DEPTH_TEST);
 
     try {
       surface.Init(gl);
@@ -45,22 +43,24 @@ public class Renderer implements GLEventListener {
   public void display(GLAutoDrawable drawable) {
     GL2 gl = drawable.getGL().getGL2();
 
-    gl.glClear(GL2.GL_COLOR_BUFFER_BIT | GL2.GL_DEPTH_BUFFER_BIT);
+    gl.glClear(GL2.GL_COLOR_BUFFER_BIT);
 
-    camera.Setup(gl, view_width, view_height);
+    gl.glMatrixMode(GL2.GL_PROJECTION);
+    gl.glLoadIdentity();
+    gl.glOrtho(-25, 25, -25, 25, 0.0, 1.0);
 
     gl.glMatrixMode(GL2.GL_MODELVIEW);
     gl.glLoadIdentity();
-    gl.glTranslated(root_y, 0, 0);
+    gl.glTranslated(0, root_y, 0);
 
     gl.glColor3f(1f, 1f, 1f);
     gl.glEnable(GL.GL_TEXTURE_2D);
     gl.glBindTexture(GL2.GL_TEXTURE_2D, texture_id);
     gl.glBegin(GL2.GL_QUADS);
-      gl.glTexCoord2f(1f, 0f); gl.glVertex3f(-10, 0f, -10);
-      gl.glTexCoord2f(0f, 0f); gl.glVertex3f(-10, 0f, 10);
-      gl.glTexCoord2f(0f, 1f); gl.glVertex3f(10, 0f, 10);
-      gl.glTexCoord2f(1f, 1f); gl.glVertex3f(10, 0f, -10);
+      gl.glTexCoord2f(0f, 1f); gl.glVertex2f(-10, -10);
+      gl.glTexCoord2f(1f, 1f); gl.glVertex2f(10, -10);
+      gl.glTexCoord2f(1f, 0f); gl.glVertex2f(10, 10);
+      gl.glTexCoord2f(0f, 0f); gl.glVertex2f(-10, 10);
     gl.glEnd();
     gl.glBindTexture(GL2.GL_TEXTURE_2D, 0);
 
@@ -118,21 +118,6 @@ public class Renderer implements GLEventListener {
     view_height = h;
   }
 
-  public void KeyPressed(int key_code) {
-    switch (key_code) {
-      case 37: camera.IncrementAzimuth(-1f); break;  // Left arrow.
-      case 38: camera.IncrementZenith(1f); break;  // Up arrow.
-      case 39: camera.IncrementAzimuth(1f); break;  // Right arrow.
-      case 40: camera.IncrementZenith(-1f); break;  // Down arrow.
-      default: break;
-    }
-  }
-
-  public void WheelRotation(int rotation) {
-    camera.IncrementRadius(rotation > 0 ? 1f : -1f);
-  }
-
-  private Camera camera;
   private int view_width;
   private int view_height;
   private Surface surface;

@@ -45,10 +45,10 @@ public class Surface {
 
     // Drawing.
     gl.glBegin(GL2.GL_QUADS);
-      gl.glTexCoord2f(1f, 0f); gl.glVertex3f(x_limits[0], 0f, z_limits[0]);
-      gl.glTexCoord2f(0f, 0f); gl.glVertex3f(x_limits[0], 0f, z_limits[1]);
-      gl.glTexCoord2f(0f, 1f); gl.glVertex3f(x_limits[1], 0f, z_limits[1]);
-      gl.glTexCoord2f(1f, 1f); gl.glVertex3f(x_limits[1], 0f, z_limits[0]);
+      gl.glTexCoord2f(0f, 1f); gl.glVertex2f(x_limits[0], z_limits[0]);
+      gl.glTexCoord2f(1f, 1f); gl.glVertex2f(x_limits[1], z_limits[0]);
+      gl.glTexCoord2f(1f, 0f); gl.glVertex2f(x_limits[1], z_limits[1]);
+      gl.glTexCoord2f(0f, 0f); gl.glVertex2f(x_limits[0], z_limits[1]);
     gl.glEnd();
 
     gl.glDisable(GL.GL_TEXTURE_2D);
