@@ -18,8 +18,8 @@ public class Renderer implements GLEventListener {
 
   @Override
   public void init(GLAutoDrawable drawable) {
-    final String texture_path = "/home/dkurtaev/Downloads/character_jump.png";
-    final String fur_places_path = "/home/dkurtaev/Downloads/fur.png";
+    final String texture_path = "/home/dkurtaev/Downloads/seed.png";
+    final String fur_places_path = "/home/dkurtaev/Downloads/seed_alpha.png";
 
     GL2 gl = drawable.getGL().getGL2();
 
@@ -35,6 +35,7 @@ public class Renderer implements GLEventListener {
     }
 
     drawable.getAnimator().setUpdateFPSFrames(n_frames_for_fps, null);
+    last_events_time = System.currentTimeMillis();
   }
 
   @Override
@@ -50,6 +51,7 @@ public class Renderer implements GLEventListener {
 
     gl.glMatrixMode(GL2.GL_MODELVIEW);
     gl.glLoadIdentity();
+    gl.glTranslated(root_y, 0, 0);
 
     gl.glColor3f(1f, 1f, 1f);
     gl.glEnable(GL.GL_TEXTURE_2D);
@@ -66,7 +68,8 @@ public class Renderer implements GLEventListener {
     for (int i = 0; i < n_surfaces; ++i) {
       surface.Draw(gl, (float)i / (n_surfaces - 1), texture_id,
                    fur_places_texture_id);
-      gl.glTranslatef(0.015f, surfaces_shift, -0.015f);
+      gl.glTranslated(fur_length * Math.sin(angle), surfaces_shift,
+                      -fur_length * Math.cos(angle));
     }
     gl.glPopMatrix();
 
@@ -75,6 +78,36 @@ public class Renderer implements GLEventListener {
     int fps = (int)drawable.getAnimator().getLastFPS();
     text_renderer.draw("fps: " + fps, 0, 8);
     text_renderer.endRendering();
+
+    long current_time = System.currentTimeMillis();
+    if (current_time - last_events_time >= 40) {
+      last_events_time = current_time;
+
+      float y0 = 2;
+      float y1 = 4;
+      float top = 8;
+      float y2 = 6;
+
+      if (root_y_inc > 0) {
+        if (y0 <= root_y && root_y < y1) {
+          angle += (-1.0f / 3.0f * Math.PI - angle) / ((y1 - root_y) / root_y_inc);
+        }
+        root_y += root_y_inc;
+        if (root_y >= top) {
+          root_y_inc *= -1;
+          root_y = top;
+        }
+      } else {
+        if (y2 < root_y && root_y <= top) {
+          angle += (0.25 * Math.PI - angle) / ((root_y - y2) / (-root_y_inc));
+        }
+        root_y += root_y_inc;
+        if (root_y <= y0) {
+          root_y_inc *= -1;
+          root_y = y0;
+        }
+      }
+    }
   }
 
   @Override
@@ -110,4 +143,11 @@ public class Renderer implements GLEventListener {
   private TextRenderer text_renderer;
   private int texture_id;
   private int fur_places_texture_id;
+
+
+  private float fur_length = 0.015f;
+  private float root_y = 2.0f;
+  private float angle = (float) (-0.25f * Math.PI);
+  private float root_y_inc = 0.1f;
+  private long last_events_time;
 }
